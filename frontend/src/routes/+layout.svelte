@@ -3,12 +3,35 @@
 	import { authStore, logout } from "$lib/stores/auth";
 	import { goto } from "$app/navigation";
 	import "../app.css";
+	import "../lib/i18n"; // Initialize i18n
+	import { isLoading, locale } from "svelte-i18n";
+
+	let isLocaleLoaded = $state(false);
+
+	$effect(() => {
+		if (!$isLoading) {
+			isLocaleLoaded = true;
+		}
+	});
 
 	let { children } = $props();
+
+	const languages = [
+		{ code: "en", label: "🇺🇸 EN" },
+		{ code: "ru", label: "🇷🇺 RU" },
+		{ code: "es", label: "🇪🇸 ES" },
+		{ code: "is", label: "🌐 IS" },
+		{ code: "eo", label: "💚 EO" },
+	];
 
 	function handleLogout() {
 		logout();
 		goto("/login");
+	}
+
+	function switchLanguage(lang: string) {
+		locale.set(lang);
+		localStorage.setItem("locale", lang);
 	}
 </script>
 
@@ -21,21 +44,44 @@
 		<div class="container nav-content">
 			<div class="brand">Chat App</div>
 			<div class="links">
-				{#if $authStore.isAuthenticated}
-					<span class="welcome">Hi, {$authStore.user?.username}</span>
-					<button class="btn-logout" onclick={handleLogout}
-						>Logout</button
-					>
-				{:else}
-					<a href="/login" class="nav-link">Login</a>
-					<a href="/register" class="nav-link">Register</a>
+				{#if isLocaleLoaded}
+					<div class="language-select-wrapper">
+						<select
+							bind:value={$locale}
+							onchange={(e: Event) =>
+								switchLanguage(
+									(e.target as HTMLSelectElement).value,
+								)}
+							class="lang-select"
+						>
+							{#each languages as lang}
+								<option value={lang.code}>{lang.label}</option>
+							{/each}
+						</select>
+					</div>
+
+					{#if $authStore.isAuthenticated}
+						<span class="welcome"
+							>Hi, {$authStore.user?.username}</span
+						>
+						<button class="btn-logout" onclick={handleLogout}
+							>Logout</button
+						>
+					{:else}
+						<a href="/login" class="nav-link">Login</a>
+						<a href="/register" class="nav-link">Register</a>
+					{/if}
 				{/if}
 			</div>
 		</div>
 	</nav>
 
 	<main class="container">
-		{@render children()}
+		{#if isLocaleLoaded}
+			{@render children()}
+		{:else}
+			<div class="loading">Loading...</div>
+		{/if}
 	</main>
 </div>
 
@@ -78,6 +124,29 @@
 		display: flex;
 		gap: 1.5rem;
 		align-items: center;
+	}
+
+	.language-select-wrapper {
+		position: relative;
+		display: flex;
+		align-items: center;
+	}
+
+	.lang-select {
+		padding: 0.4rem 0.8rem;
+		border-radius: 20px;
+		border: 1px solid var(--border-color);
+		background-color: transparent;
+		font-size: 0.9rem;
+		cursor: pointer;
+		outline: none;
+		transition: all 0.2s;
+		color: var(--text-main);
+	}
+
+	.lang-select:hover {
+		background-color: var(--bg-color);
+		border-color: var(--primary);
 	}
 
 	.nav-link {

@@ -4,28 +4,32 @@
     import { authStore } from "$lib/stores/auth";
     import StoryViewer from "./StoryViewer.svelte";
 
-    let stories: any[] = [];
-    let userStory: any = null;
+    import { _ } from "svelte-i18n";
+
+    import type { UserStoryGroup } from "$lib/types";
+
+    let { stories = [] }: { stories?: UserStoryGroup[] } = $props();
+    let userStory = $state<UserStoryGroup | undefined>(undefined);
     let fileInput: HTMLInputElement;
-    let viewerOpen = false;
-    let activeStoryIndex = 0;
-    let activeStoryUserIndex = 0;
 
     // Camera recording state
-    let showCameraModal = false;
+    let showCameraModal = $state(false);
     let cameraStream: MediaStream | null = null;
     let mediaRecorder: MediaRecorder | null = null;
     let recordedChunks: Blob[] = [];
-    let isRecording = false;
-    let videoPreview: HTMLVideoElement;
-    let recordingTime = 0;
-    let recordingInterval: number;
+    let isRecording = $state(false);
+    let videoPreview = $state<HTMLVideoElement | undefined>(undefined);
+    let recordingTime = $state(0);
+    let recordingInterval: any; // Fix type issue
 
-    onMount(loadStories);
+    // View State
+    let viewerOpen = $state(false);
+    let activeStoryUserIndex = $state(0);
+    let activeStoryIndex = $state(0);
 
-    async function loadStories() {
+    const loadStories = async () => {
         try {
-            const res = await api("GET", "/stories");
+            const res = await api<UserStoryGroup[]>("GET", "/stories");
             stories = res;
             const myId = $authStore.user?._id;
             userStory = stories.find((s) => s.user._id === myId);
@@ -33,11 +37,38 @@
         } catch (e) {
             console.error(e);
         }
-    }
+    };
 
-    async function handleUpload(e: Event) {
-        const file = (e.target as HTMLInputElement).files?.[0];
-        if (!file) return;
+    onMount(loadStories);
+
+    const stopRecording = () => {
+        if (mediaRecorder && isRecording) {
+            mediaRecorder.stop();
+            isRecording = false;
+            clearInterval(recordingInterval);
+        }
+    };
+
+    const closeCamera = () => {
+        if (cameraStream) {
+            cameraStream.getTracks().forEach((track) => track.stop());
+            cameraStream = null;
+        }
+        if (isRecording) {
+            stopRecording();
+        }
+        showCameraModal = false;
+        recordedChunks = [];
+        recordingTime = 0;
+    };
+
+    const uploadRecordedVideo = async () => {
+        if (recordedChunks.length === 0) return;
+
+        const blob = new Blob(recordedChunks, { type: "video/webm" });
+        const file = new File([blob], `story-${Date.now()}.webm`, {
+            type: "video/webm",
+        });
 
         const formData = new FormData();
         formData.append("file", file);
@@ -45,40 +76,36 @@
         try {
             await api("POST", "/stories", formData);
             await loadStories();
+            closeCamera();
         } catch (e) {
             alert("Failed to upload story");
         }
-    }
+    };
 
-    async function openCamera() {
-        try {
-            showCameraModal = true;
-            cameraStream = await navigator.mediaDevices.getUserMedia({
-                video: { facingMode: "user", width: 720, height: 1280 },
-                audio: true,
-            });
-
-            // Wait for next tick to ensure videoPreview exists
-            setTimeout(() => {
-                if (videoPreview && cameraStream) {
-                    videoPreview.srcObject = cameraStream;
-                }
-            }, 100);
-        } catch (err) {
-            console.error("Camera access denied:", err);
-            alert("Please grant camera permissions to record stories");
-            closeCamera();
-        }
-    }
-
-    function startRecording() {
+    const startRecording = () => {
         if (!cameraStream) return;
 
         recordedChunks = [];
         recordingTime = 0;
 
+        // Use reliable mimeType for audio+video
+        const mimeTypes = [
+            "video/webm;codecs=vp9,opus",
+            "video/webm;codecs=vp8,opus",
+            "video/webm",
+            "video/mp4",
+        ];
+
+        let selectedMimeType = "";
+        for (const type of mimeTypes) {
+            if (MediaRecorder.isTypeSupported(type)) {
+                selectedMimeType = type;
+                break;
+            }
+        }
+
         mediaRecorder = new MediaRecorder(cameraStream, {
-            mimeType: "video/webm;codecs=vp9",
+            mimeType: selectedMimeType || "video/webm",
         });
 
         mediaRecorder.ondataavailable = (event) => {
@@ -100,23 +127,32 @@
                 stopRecording();
             }
         }, 1000);
-    }
+    };
 
-    function stopRecording() {
-        if (mediaRecorder && isRecording) {
-            mediaRecorder.stop();
-            isRecording = false;
-            clearInterval(recordingInterval);
+    const openCamera = async () => {
+        try {
+            showCameraModal = true;
+            cameraStream = await navigator.mediaDevices.getUserMedia({
+                video: { facingMode: "user", width: 720, height: 1280 },
+                audio: true,
+            });
+
+            // Wait for next tick to ensure videoPreview exists
+            setTimeout(() => {
+                if (videoPreview && cameraStream) {
+                    videoPreview.srcObject = cameraStream;
+                }
+            }, 100);
+        } catch (err) {
+            console.error("Camera access denied:", err);
+            alert("Please grant camera permissions to record stories");
+            closeCamera();
         }
-    }
+    };
 
-    async function uploadRecordedVideo() {
-        if (recordedChunks.length === 0) return;
-
-        const blob = new Blob(recordedChunks, { type: "video/webm" });
-        const file = new File([blob], `story-${Date.now()}.webm`, {
-            type: "video/webm",
-        });
+    const handleUpload = async (e: Event) => {
+        const file = (e.target as HTMLInputElement).files?.[0];
+        if (!file) return;
 
         const formData = new FormData();
         formData.append("file", file);
@@ -124,90 +160,76 @@
         try {
             await api("POST", "/stories", formData);
             await loadStories();
-            closeCamera();
         } catch (e) {
             alert("Failed to upload story");
         }
-    }
+    };
 
-    function closeCamera() {
-        if (cameraStream) {
-            cameraStream.getTracks().forEach((track) => track.stop());
-            cameraStream = null;
-        }
-        if (isRecording) {
-            stopRecording();
-        }
-        showCameraModal = false;
-        recordedChunks = [];
-        recordingTime = 0;
-    }
-
-    function openViewer(userIndex: number, storyIndex = 0) {
+    const openViewer = (userIndex: number, storyIndex = 0) => {
         activeStoryUserIndex = userIndex;
         activeStoryIndex = storyIndex;
         viewerOpen = true;
-    }
+    };
 
-    function formatTime(seconds: number): string {
+    const formatTime = (seconds: number): string => {
         const mins = Math.floor(seconds / 60);
         const secs = seconds % 60;
         return `${mins}:${secs.toString().padStart(2, "0")}`;
-    }
+    };
 </script>
 
-<div class="stories-bar">
-    <!-- Your Story -->
-    <div class="story-item">
-        <button
-            type="button"
-            class="avatar-ring {userStory ? 'active' : ''}"
-            on:click={() => (userStory ? openViewer(-1) : fileInput.click())}
-            aria-label={userStory ? "View your story" : "Add your story"}
-        >
-            {#if !userStory}
-                <div class="add-icon">+</div>
-            {:else}
-                <div class="avatar">{userStory.user.username[0]}</div>
-            {/if}
-        </button>
-        <span class="name">Your Story</span>
-        <input
-            type="file"
-            accept="video/*,image/*"
-            bind:this={fileInput}
-            on:change={handleUpload}
-            style="display: none;"
-        />
-    </div>
-
-    <!-- Camera Record Button -->
-    <div class="story-item">
-        <button
-            type="button"
-            class="avatar-ring camera-button"
-            on:click={openCamera}
-            aria-label="Record story"
-        >
-            <div class="camera-icon">📷</div>
-        </button>
-        <span class="name">Record</span>
-    </div>
-
-    <!-- Friends Stories -->
-    {#each stories as group, i}
+<div class="stories-bar-container">
+    <div class="stories-bar">
+        <!-- Your Story -->
         <div class="story-item">
             <button
                 type="button"
-                class="avatar-ring active"
-                on:click={() => openViewer(i)}
-                aria-label="View {group.user.username}'s story"
+                class="avatar-ring {userStory ? 'active' : ''}"
+                onclick={() => (userStory ? openViewer(-1) : fileInput.click())}
+                aria-label={userStory
+                    ? $_("stories.view_story")
+                    : $_("stories.add_story")}
             >
-                <div class="avatar">{group.user.username[0]}</div>
+                {#if !userStory}
+                    <div class="add-icon">+</div>
+                {:else}
+                    <div class="avatar">{userStory.user.username[0]}</div>
+                {/if}
             </button>
-            <span class="name">{group.user.username}</span>
+            <span class="name">{$_("stories.your_story")}</span>
+            <input
+                type="file"
+                accept="video/*,image/*"
+                bind:this={fileInput}
+                onchange={handleUpload}
+                style="display: none;"
+            />
         </div>
-    {/each}
+
+        <!-- Other Stories -->
+        {#each stories as story, index}
+            <div class="story-item">
+                <button
+                    type="button"
+                    class="avatar-ring active"
+                    onclick={() => openViewer(index)}
+                    aria-label="View {story.user.username}'s story"
+                >
+                    <div class="avatar">{story.user.username[0]}</div>
+                </button>
+                <span class="name">{story.user.username}</span>
+            </div>
+        {/each}
+
+        <!-- Camera Button -->
+        <button
+            class="camera-btn"
+            onclick={openCamera}
+            aria-label={$_("camera.open_camera")}
+        >
+            📷
+        </button>
+    </div>
 </div>
 
 <!-- Camera Modal -->
@@ -216,8 +238,8 @@
         class="camera-modal"
         role="dialog"
         aria-modal="true"
-        on:click|self={closeCamera}
-        on:keydown={(e) => e.key === "Escape" && closeCamera()}
+        onclick={(e) => e.target === e.currentTarget && closeCamera()}
+        onkeydown={(e) => e.key === "Escape" && closeCamera()}
         tabindex="-1"
     >
         <div class="camera-container">
@@ -230,167 +252,206 @@
             ></video>
 
             <div class="camera-controls">
-                {#if isRecording}
-                    <div class="recording-indicator">
-                        <span class="rec-dot"></span>
-                        <span class="rec-time">{formatTime(recordingTime)}</span
-                        >
-                    </div>
-                {/if}
-
-                <div class="control-buttons">
-                    <button
-                        type="button"
-                        class="control-btn close-btn"
-                        on:click={closeCamera}
-                        aria-label="Close camera"
-                    >
-                        ✕
+                {#if !isRecording}
+                    <button class="record-btn" onclick={startRecording}>
+                        {$_("camera.start_recording")}
                     </button>
-
-                    {#if !isRecording}
-                        <button
-                            type="button"
-                            class="control-btn record-btn"
-                            on:click={startRecording}
-                            aria-label="Start recording"
-                        >
-                            ⏺
-                        </button>
-                    {:else}
-                        <button
-                            type="button"
-                            class="control-btn stop-btn"
-                            on:click={stopRecording}
-                            aria-label="Stop recording"
-                        >
-                            ⏹
-                        </button>
-                    {/if}
-                </div>
+                {:else}
+                    <button class="stop-btn" onclick={stopRecording}>
+                        <div class="stop-icon"></div>
+                        {formatTime(recordingTime)}
+                    </button>
+                {/if}
+                <button class="close-btn" onclick={closeCamera}>×</button>
             </div>
         </div>
     </div>
 {/if}
 
+<!-- Story Viewer -->
 {#if viewerOpen}
     <StoryViewer
         stories={activeStoryUserIndex === -1 ? [userStory] : stories}
         initialUserIndex={activeStoryUserIndex === -1
             ? 0
             : activeStoryUserIndex}
-        on:close={() => (viewerOpen = false)}
+        initialStoryIndex={activeStoryIndex}
+        onClose={() => (viewerOpen = false)}
     />
 {/if}
 
 <style>
+    .stories-bar-container {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        background: var(--surface-color);
+        padding: 1rem;
+        border-bottom: 1px solid var(--border-color);
+        width: 100%;
+    }
+
     .stories-bar {
         display: flex;
-        overflow-x: auto;
-        padding: 1rem;
         gap: 1rem;
-        background: #fff;
-        border-bottom: 1px solid #eee;
-        scrollbar-width: none;
+        overflow-x: auto;
+        padding-bottom: 0.5rem;
+        flex: 1;
+        scrollbar-width: none; /* Firefox */
     }
     .stories-bar::-webkit-scrollbar {
-        display: none;
+        display: none; /* Chrome, Safari, Edge */
     }
+
     .story-item {
         display: flex;
         flex-direction: column;
         align-items: center;
+        gap: 0.25rem;
         cursor: pointer;
-        min-width: 64px;
+        min-width: 64px; /* Ensure items don't shrink too much */
     }
+
     .avatar-ring {
-        width: 56px;
-        height: 56px;
+        width: 64px;
+        height: 64px;
         border-radius: 50%;
         padding: 2px;
-        border: 2px solid #ddd;
+        background: transparent;
+        border: 2px solid var(--border-color);
+        cursor: pointer;
+        transition: all 0.2s;
         display: flex;
         align-items: center;
         justify-content: center;
-        background: transparent;
-        cursor: pointer;
     }
+
     .avatar-ring.active {
-        border-color: #e1306c;
+        border-color: var(--primary);
+        background: linear-gradient(
+            45deg,
+            #f09433 0%,
+            #e6683c 25%,
+            #dc2743 50%,
+            #cc2366 75%,
+            #bc1888 100%
+        );
+        padding: 3px;
     }
-    .avatar-ring.camera-button {
-        border-color: #0095f6;
+
+    .add-icon {
+        width: 100%;
+        height: 100%;
+        background: var(--bg-color);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        color: var(--primary);
     }
-    .avatar,
-    .add-icon,
-    .camera-icon {
+
+    .avatar {
         width: 100%;
         height: 100%;
         border-radius: 50%;
-        background: #eee;
+        background: var(--bg-color);
         display: flex;
         align-items: center;
         justify-content: center;
         font-weight: 600;
+        font-size: 1.25rem;
+        color: var(--text-main);
+        object-fit: cover;
+        border: 2px solid var(--surface-color);
     }
-    .add-icon {
-        font-size: 1.5rem;
-        color: #0095f6;
-        background: #fff;
-    }
-    .camera-icon {
-        font-size: 1.5rem;
-        background: #fff;
-    }
+
     .name {
         font-size: 0.75rem;
-        margin-top: 0.25rem;
-        max-width: 64px;
+        color: var(--text-secondary);
+        max-width: 70px;
         overflow: hidden;
         text-overflow: ellipsis;
         white-space: nowrap;
     }
 
-    /* Camera Modal */
+    .camera-btn {
+        width: 64px;
+        height: 64px;
+        border-radius: 50%;
+        background: var(--surface-color);
+        border: 1px dashed var(--text-secondary);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        cursor: pointer;
+        transition: all 0.2s;
+        flex-shrink: 0; /* Prevent shrinking */
+    }
+
+    .camera-btn:hover {
+        background: var(--bg-color);
+        border-color: var(--primary);
+    }
+
     .camera-modal {
         position: fixed;
         top: 0;
         left: 0;
-        width: 100%;
-        height: 100%;
-        background: rgba(0, 0, 0, 0.95);
+        width: 100vw;
+        height: 100vh;
+        background: black;
+        z-index: 2000;
         display: flex;
-        align-items: center;
-        justify-content: center;
-        z-index: 10000;
+        flex-direction: column;
     }
+
     .camera-container {
         position: relative;
         width: 100%;
-        max-width: 500px;
-        height: 80vh;
-        background: #000;
-        border-radius: 12px;
-        overflow: hidden;
+        height: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
     }
+
     .camera-preview {
         width: 100%;
         height: 100%;
         object-fit: cover;
     }
+
     .camera-controls {
         position: absolute;
-        bottom: 0;
-        left: 0;
-        right: 0;
-        padding: 2rem;
-        background: linear-gradient(to top, rgba(0, 0, 0, 0.7), transparent);
+        bottom: 2rem;
+        width: 100%;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 1rem;
+        pointer-events: none; /* Allow clicks to pass through unless on a button */
     }
-    .recording-indicator {
-        position: absolute;
-        top: 1rem;
-        left: 50%;
-        transform: translateX(-50%);
+
+    .record-btn,
+    .stop-btn {
+        pointer-events: auto; /* Re-enable clicks for buttons */
+        padding: 1rem 2rem;
+        border-radius: 2rem;
+        border: none;
+        font-weight: 600;
+        cursor: pointer;
+        transition: transform 0.1s;
+    }
+
+    .record-btn {
+        background: #ff3b30;
+        color: white;
+    }
+
+    .stop-btn {
+        background: white;
+        color: black;
         display: flex;
         align-items: center;
         gap: 0.5rem;
@@ -398,17 +459,6 @@
         padding: 0.5rem 1rem;
         border-radius: 20px;
         color: white;
-    }
-    .rec-dot {
-        width: 12px;
-        height: 12px;
-        border-radius: 50%;
-        background: #ff0000;
-        animation: pulse 1s infinite;
-    }
-    .rec-time {
-        font-weight: 600;
-        font-family: monospace;
     }
     @keyframes pulse {
         0%,
@@ -419,41 +469,30 @@
             opacity: 0.5;
         }
     }
-    .control-buttons {
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        gap: 2rem;
+
+    .stop-icon {
+        width: 12px;
+        height: 12px;
+        background: #ff3b30;
+        border-radius: 2px;
     }
-    .control-btn {
-        width: 60px;
-        height: 60px;
-        border-radius: 50%;
-        border: 3px solid white;
-        background: rgba(255, 255, 255, 0.2);
-        color: white;
-        font-size: 2rem;
-        cursor: pointer;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        transition: all 0.2s;
-    }
-    .control-btn:hover {
-        background: rgba(255, 255, 255, 0.4);
-        transform: scale(1.1);
-    }
-    .record-btn {
-        background: #e1306c;
-        border-color: #e1306c;
-    }
-    .stop-btn {
-        background: #ff4444;
-        border-color: #ff4444;
-    }
+
     .close-btn {
-        width: 48px;
-        height: 48px;
+        pointer-events: auto;
+        position: absolute;
+        top: 2rem;
+        right: 2rem;
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background: rgba(0, 0, 0, 0.5);
+        color: white;
+        border: none;
         font-size: 1.5rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        z-index: 1002;
     }
 </style>

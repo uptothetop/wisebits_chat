@@ -3,6 +3,7 @@ import { UsersService } from '../users/users.service';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 import { CreateUserDto } from '../users/dto/create-user.dto';
+import { User } from '../users/schemas/user.schema';
 
 @Injectable()
 export class AuthService {
@@ -11,7 +12,13 @@ export class AuthService {
         private jwtService: JwtService,
     ) { }
 
-    async validateUser(username: string, pass: string): Promise<any> {
+    /**
+   * Validates a user based on username and password.
+   * @param username The username to validate.
+   * @param pass The password to validate.
+   * @returns The user object (minus password) if validation succeeds, or null.
+   */
+    async validateUser(username: string, pass: string): Promise<Record<string, unknown> | null> {
         const user = await this.usersService.findOne(username);
         if (user && (await bcrypt.compare(pass, user.password))) {
             // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -21,7 +28,7 @@ export class AuthService {
         return null;
     }
 
-    async login(user: any) {
+    async login(user: User & { _id: string }) {
         const payload = { username: user.username, sub: user._id };
         return {
             access_token: this.jwtService.sign(payload),

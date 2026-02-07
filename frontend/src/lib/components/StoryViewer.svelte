@@ -1,19 +1,29 @@
 <script lang="ts">
-    import { onMount, createEventDispatcher } from "svelte";
+    import { onMount } from "svelte";
 
-    export let stories: any[] = []; // Grouped stories by user { user, items: [] }
-    export let initialUserIndex = 0;
+    let {
+        stories = [],
+        initialUserIndex = 0,
+        initialStoryIndex = 0,
+        onClose = () => {},
+    } = $props();
 
-    const dispatch = createEventDispatcher();
-
-    let currentUserIndex = initialUserIndex;
-    let currentStoryIndex = 0;
-    let progress = 0;
-    let timer: any;
+    let currentUserIndex = $state(initialUserIndex);
+    let currentStoryIndex = $state(initialStoryIndex);
+    let progress = $state(0);
+    let timer: ReturnType<typeof setInterval>;
     const DURATION = 5000; // 5 seconds per story
 
-    $: currentUserGroup = stories[currentUserIndex];
-    $: currentStory = currentUserGroup?.items[currentStoryIndex];
+    // Sync state with props if they change externally (optional pattern for controlled components)
+    $effect(() => {
+        currentUserIndex = initialUserIndex;
+    });
+    $effect(() => {
+        currentStoryIndex = initialStoryIndex;
+    });
+
+    let currentUserGroup = $derived(stories[currentUserIndex]);
+    let currentStory = $derived(currentUserGroup?.items[currentStoryIndex]);
 
     onMount(() => {
         startTimer();
@@ -78,14 +88,10 @@
 
     function close() {
         stopTimer();
-        dispatch("close");
+        onClose();
     }
 
     function handleVideoEnd() {
-        // If video, we might want to wait for video end instead of timer
-        // But for simplicity, we use timer or maybe override timer duration based on video duration?
-        // For now, consistent 5s is fine, or let video play fully?
-        // Ideally: if video, pause timer, wait for end.
         nextStory();
     }
 </script>
@@ -102,7 +108,7 @@
                         currentStory.createdAt,
                     ).toLocaleTimeString()}</span
                 >
-                <button class="close-btn" on:click={close}>&times;</button>
+                <button class="close-btn" onclick={close}>&times;</button>
             </div>
 
             <!-- Progress Bar -->
@@ -127,12 +133,12 @@
                 role="button"
                 tabindex="0"
                 aria-label="Story content. Click left to go back, right to advance."
-                on:click={(e) => {
+                onclick={(e) => {
                     const width = e.currentTarget.offsetWidth;
                     if (e.clientX < width / 3) prevStory();
                     else nextStory();
                 }}
-                on:keydown={(e) => {
+                onkeydown={(e) => {
                     if (e.key === "ArrowLeft") prevStory();
                     else if (e.key === "ArrowRight") nextStory();
                     else if (e.key === "Escape") close();
@@ -144,8 +150,8 @@
                         autoplay
                         muted
                         playsinline
-                        on:ended={handleVideoEnd}
-                        on:loadedmetadata={(e) => {
+                        onended={handleVideoEnd}
+                        onloadedmetadata={(e) => {
                             // Optional: adjust duration to video length?
                         }}
                     ></video>

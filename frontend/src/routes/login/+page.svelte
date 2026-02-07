@@ -2,58 +2,69 @@
   import { api } from "$lib/api";
   import { login } from "$lib/stores/auth";
   import { goto } from "$app/navigation";
+  import { _ } from "svelte-i18n";
 
-  let username = "";
-  let password = "";
-  let error = "";
+  let username = $state("");
+  let password = $state("");
+  let error = $state("");
 
-  async function handleSubmit() {
+  const handleSubmit = async (e: Event) => {
+    e.preventDefault();
     try {
-      const res = await api("POST", "/auth/login", { username, password });
+      const res = await api<any>("POST", "/auth/login", { username, password });
       login(res.access_token, res.user);
       goto("/");
-    } catch (e: any) {
-      error = e.message;
+    } catch (e: unknown) {
+      if (e instanceof Error) {
+        error = e.message;
+      } else {
+        error = String(e);
+      }
     }
-  }
+  };
 </script>
 
 <div class="page-container">
   <div class="card">
-    <h1>Welcome Back</h1>
-    <p class="subtitle">Sign in to your account</p>
+    <h1>{$_("app.title")}</h1>
+    <p class="subtitle">{$_("auth.login_button")}</p>
 
-    <form on:submit|preventDefault={handleSubmit}>
+    <form onsubmit={handleSubmit}>
       {#if error}
         <div class="error-alert">{error}</div>
       {/if}
 
       <div class="form-group">
-        <label for="username">Username</label>
+        <label for="username">{$_("auth.username")}</label>
         <input
           id="username"
           type="text"
           bind:value={username}
           required
-          placeholder="Enter your username"
+          placeholder={$_("auth.username")}
         />
       </div>
 
       <div class="form-group">
-        <label for="password">Password</label>
+        <label for="password">{$_("auth.password")}</label>
         <input
           id="password"
           type="password"
           bind:value={password}
           required
-          placeholder="Enter your password"
+          placeholder={$_("auth.password")}
         />
       </div>
 
-      <button type="submit" class="btn-primary">Sign In</button>
+      <button type="submit" class="btn-primary"
+        >{$_("auth.login_button")}</button
+      >
 
       <div class="footer">
-        <p>Don't have an account? <a href="/register">Create one</a></p>
+        <p>
+          {$_("auth.no_account")}
+          <a href="/register">{$_("auth.register_button")}</a>
+        </p>
       </div>
     </form>
   </div>

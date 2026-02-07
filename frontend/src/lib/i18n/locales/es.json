@@ -1,0 +1,43 @@
+{
+    "app": {
+        "title": "Wisebits Chat"
+    },
+    "nav": {
+        "home": "Inicio",
+        "login": "Iniciar sesión",
+        "register": "Registrarse",
+        "logout": "Cerrar sesión"
+    },
+    "stories": {
+        "your_story": "Tu historia",
+        "add_story": "Añadir tu historia",
+        "view_story": "Ver tu historia",
+        "camera_permission_denied": "Por favor, concede permisos de cámara para grabar historias",
+        "upload_failed": "Error al subir la historia"
+    },
+    "chat": {
+        "search_placeholder": "Buscar usuarios...",
+        "new_chat": "Nuevo chat",
+        "type_message": "Escribe un mensaje...",
+        "send": "Enviar",
+        "select_chat": "Selecciona un chat para empezar a escribir",
+        "online": "En línea",
+        "offline": "Desconectado"
+    },
+    "auth": {
+        "username": "Nombre de usuario",
+        "email": "Correo electrónico",
+        "password": "Contraseña",
+        "login_button": "Iniciar sesión",
+        "register_button": "Registrarse",
+        "have_account": "¿Ya tienes una cuenta? Iniciar sesión",
+        "no_account": "¿No tienes una cuenta? Registrarse",
+        "login_success": "¡Inicio de sesión exitoso!",
+        "register_success": "¡Registro exitoso! Por favor, inicia sesión."
+    },
+    "camera": {
+        "start_recording": "Iniciar grabación",
+        "stop_recording": "Detener grabación",
+        "uploading": "Subiendo..."
+    }
+}

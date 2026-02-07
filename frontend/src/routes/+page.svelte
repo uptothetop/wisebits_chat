@@ -8,62 +8,46 @@
         socketStore,
     } from "$lib/stores/socket";
     import { goto } from "$app/navigation";
-    import { derived, get, writable } from "svelte/store";
+    import { get } from "svelte/store";
     import StoriesBar from "$lib/components/StoriesBar.svelte";
+    import { _ } from "svelte-i18n";
+    import type { Conversation, Message, User } from "$lib/types";
 
-    let conversations: any[] = [];
-    let activeConversation: any = null;
-    let activeMessages: any[] = [];
-    let messageInput = "";
-    let searchQuery = "";
-    // searchResults type: User[]
-    let searchResults: any[] = [];
-    let showSearch = false;
+    let conversations = $state<Conversation[]>([]);
+    let activeConversation = $state<Conversation | null>(null);
+    let activeMessages = $state<Message[]>([]);
+    let messageInput = $state("");
+    let searchQuery = $state("");
+    let searchResults = $state<User[]>([]);
+    let showSearch = $state(false);
 
-    onMount(async () => {
-        // Auth check
-        // Wait for store to be populated from localstorage (sync)
-        if (!get(authStore).isAuthenticated) {
-            goto("/login");
-            return;
-        }
+    const getSenderId = (msg: Message) => {
+        return typeof msg.sender === "string" ? msg.sender : msg.sender._id;
+    };
 
-        const socket = initSocket();
-        if (socket) {
-            socket.on("receiveMessage", (msg: any) => {
-                handleIncomingMessage(msg);
-            });
-        }
+    const getSenderName = (msg: Message) => {
+        return typeof msg.sender === "string" ? "Unknown" : msg.sender.username;
+    };
 
-        await loadConversations();
-    });
+    const scrollToBottom = () => {
+        setTimeout(() => {
+            const el = document.getElementById("message-list");
+            if (el) el.scrollTop = el.scrollHeight;
+        }, 50);
+    };
 
-    onDestroy(() => {
-        disconnectSocket();
-    });
-
-    async function loadConversations() {
+    const loadConversations = async () => {
         try {
-            conversations = await api("GET", "/chat/conversations");
+            conversations = await api<Conversation[]>(
+                "GET",
+                "/chat/conversations",
+            );
         } catch (e) {
             console.error("Failed to load conversations", e);
         }
-    }
+    };
 
-    async function selectConversation(conv: any) {
-        activeConversation = conv;
-        try {
-            activeMessages = await api(
-                "GET",
-                `/chat/conversations/${conv._id}/messages`,
-            );
-            scrollToBottom();
-        } catch (e) {
-            console.error("Failed to load messages", e);
-        }
-    }
-
-    function handleIncomingMessage(msg: any) {
+    const handleIncomingMessage = (msg: Message) => {
         // If active conversation matches, append to messages
         if (activeConversation && msg.conversation === activeConversation._id) {
             activeMessages = [...activeMessages, msg];
@@ -76,6 +60,8 @@
         );
         if (convIndex > -1) {
             const conv = conversations[convIndex];
+            // Update lastMessage - need to be careful with types if lastMessage is populated vs ObjectId
+            // Assuming msg is Message object
             conv.lastMessage = msg;
             // Move to top
             const otherConvs = conversations.filter((c) => c._id !== conv._id);
@@ -84,16 +70,29 @@
             // New conversation initiated by someone else? Reload list
             loadConversations();
         }
-    }
+    };
 
-    async function handleSendMessage() {
+    const selectConversation = async (conv: Conversation) => {
+        activeConversation = conv;
+        try {
+            activeMessages = await api<Message[]>(
+                "GET",
+                `/chat/conversations/${conv._id}/messages`,
+            );
+            scrollToBottom();
+        } catch (e) {
+            console.error("Failed to load messages", e);
+        }
+    };
+
+    const handleSendMessage = async () => {
         if (!messageInput.trim() || !activeConversation) return;
 
         // Find recipient
         const me = get(authStore).user;
         if (!me) return;
         const recipient = activeConversation.participants.find(
-            (p: any) => p._id !== me._id,
+            (p) => p._id !== me._id,
         );
         if (!recipient) return;
 
@@ -105,26 +104,30 @@
             });
             messageInput = "";
         }
-    }
+    };
 
-    async function handleSearch() {
+    const handleSearch = async () => {
         if (!searchQuery) {
             searchResults = [];
             return;
         }
         try {
-            searchResults = await api("GET", `/users?q=${searchQuery}`);
+            searchResults = await api<User[]>("GET", `/users?q=${searchQuery}`);
         } catch (e) {
             console.error(e);
         }
-    }
+    };
 
-    async function startChat(user: any) {
+    const startChat = async (user: User) => {
         try {
             // Create conversation
-            const conv = await api("POST", "/chat/conversations", {
-                recipientId: user._id,
-            });
+            const conv = await api<Conversation>(
+                "POST",
+                "/chat/conversations",
+                {
+                    recipientId: user._id,
+                },
+            );
             // Reload conversations and select
             await loadConversations();
             // Find the new conversation object in the reloaded list (it might have populate fields)
@@ -138,32 +141,44 @@
         } catch (e) {
             console.error(e);
         }
-    }
+    };
 
-    function scrollToBottom() {
-        setTimeout(() => {
-            const el = document.getElementById("message-list");
-            if (el) el.scrollTop = el.scrollHeight;
-        }, 50);
-    }
-
-    function getOtherUser(conv: any) {
+    const getOtherUser = (conv: Conversation) => {
         const me = get(authStore).user;
-        if (!me) return { username: "Unknown" };
-        return (
-            conv.participants.find((p: any) => p._id !== me._id) || {
-                username: "Unknown",
-            }
-        );
-    }
+        if (!me) return { username: "Unknown" } as User;
+        const other = conv.participants.find((p) => p._id !== me._id);
+        return other || ({ username: "Unknown" } as User);
+    };
+
+    // Lifecycle
+    onMount(async () => {
+        // Auth check
+        if (!get(authStore).isAuthenticated) {
+            goto("/login");
+            return;
+        }
+
+        const socket = initSocket();
+        if (socket) {
+            socket.on("receiveMessage", (msg: Message) => {
+                handleIncomingMessage(msg);
+            });
+        }
+
+        await loadConversations();
+    });
+
+    onDestroy(() => {
+        disconnectSocket();
+    });
 </script>
 
 <div class="container">
     <div class="sidebar">
         <div class="header">
-            <h2>Chats</h2>
-            <button on:click={() => (showSearch = !showSearch)}>
-                {showSearch ? "Cancel" : "New Chat"}
+            <h2>{$_("app.title")}</h2>
+            <button onclick={() => (showSearch = !showSearch)}>
+                {showSearch ? $_("chat.select_chat") : $_("chat.new_chat")}
             </button>
         </div>
 
@@ -173,14 +188,14 @@
             <div class="search-area">
                 <input
                     bind:value={searchQuery}
-                    on:input={handleSearch}
-                    placeholder="Search user..."
+                    oninput={handleSearch}
+                    placeholder={$_("chat.search_placeholder")}
                 />
                 <div class="results">
                     {#each searchResults as user}
                         <button
                             class="result-item"
-                            on:click={() => startChat(user)}
+                            onclick={() => startChat(user)}
                         >
                             {user.username}
                         </button>
@@ -193,7 +208,7 @@
                     <button
                         class="conversation-item"
                         class:active={activeConversation?._id === conv._id}
-                        on:click={() => selectConversation(conv)}
+                        onclick={() => selectConversation(conv)}
                     >
                         <div class="avatar">
                             {(
@@ -205,7 +220,8 @@
                                 {getOtherUser(conv)?.username}
                             </div>
                             <div class="last-message">
-                                {conv.lastMessage?.content || "No messages"}
+                                {conv.lastMessage?.content ||
+                                    $_("chat.offline")}
                             </div>
                         </div>
                     </button>
@@ -223,12 +239,12 @@
                 {#each activeMessages as msg}
                     <div
                         class="message"
-                        class:own={msg.sender._id === $authStore.user?._id}
+                        class:own={getSenderId(msg) === $authStore.user?._id}
                     >
                         <div class="bubble">
-                            {#if msg.sender._id !== $authStore.user?._id}
+                            {#if getSenderId(msg) !== $authStore.user?._id}
                                 <div class="sender-name">
-                                    {msg.sender.username}
+                                    {getSenderName(msg)}
                                 </div>
                             {/if}
                             {msg.content}
@@ -239,14 +255,14 @@
             <div class="input-area">
                 <input
                     bind:value={messageInput}
-                    on:keydown={(e) => e.key === "Enter" && handleSendMessage()}
-                    placeholder="Type a message..."
+                    onkeydown={(e) => e.key === "Enter" && handleSendMessage()}
+                    placeholder={$_("chat.type_message")}
                 />
-                <button on:click={handleSendMessage}>Send</button>
+                <button onclick={handleSendMessage}>{$_("chat.send")}</button>
             </div>
         {:else}
             <div class="empty-state">
-                Select a conversation to start chatting
+                {$_("chat.select_chat")}
             </div>
         {/if}
     </div>

@@ -1,10 +1,10 @@
-import { io, type Socket } from "socket.io-client";
+import { io, type Socket } from 'socket.io-client';
 import { writable, get } from 'svelte/store';
 import { authStore } from './auth';
 
 export const socketStore = writable<Socket | null>(null);
 
-export function initSocket() {
+export const initSocket = () => {
     const { token, user } = get(authStore);
     if (!token || !user) return;
 
@@ -24,7 +24,7 @@ export function initSocket() {
     return socket;
 }
 
-export function disconnectSocket() {
+export const disconnectSocket = () => {
     const socket = get(socketStore);
     if (socket) {
         socket.disconnect();

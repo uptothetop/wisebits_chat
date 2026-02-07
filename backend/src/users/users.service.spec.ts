@@ -1,11 +1,12 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { UsersService } from './users.service';
 import { getModelToken } from '@nestjs/mongoose';
-import { User } from './schemas/user.schema';
+import { User, UserDocument } from './schemas/user.schema';
+import { Model, Query } from 'mongoose';
 
 describe('UsersService', () => {
   let service: UsersService;
-  let model: any;
+  let model: Model<UserDocument>;
 
   const mockUser = {
     username: 'test',
@@ -26,13 +27,14 @@ describe('UsersService', () => {
   };
 
   // Mock implementation for the model constructor
-  function MockUserModel(dto: any) {
+  // function mandated for constructor usage
+  function MockUserModel(this: any, dto: unknown) {
     this.data = dto;
     this.save = jest.fn().mockResolvedValue(this.data);
   }
-  MockUserModel.find = jest.fn();
-  MockUserModel.findOne = jest.fn();
-  MockUserModel.findById = jest.fn();
+  (MockUserModel as unknown as { find: jest.Mock }).find = jest.fn();
+  (MockUserModel as unknown as { findOne: jest.Mock }).findOne = jest.fn();
+  (MockUserModel as unknown as { findById: jest.Mock }).findById = jest.fn();
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -60,7 +62,7 @@ describe('UsersService', () => {
       // Mock find to return empty array (no duplicate)
       jest.spyOn(model, 'find').mockReturnValue({
         exec: jest.fn().mockResolvedValue([]),
-      } as any);
+      } as unknown as Query<UserDocument[], UserDocument>);
 
       // We expect the service to hash password and save
       const result = await service.create(dto);
@@ -72,7 +74,7 @@ describe('UsersService', () => {
       const dto = { username: 'test', email: 'test@email.com', password: 'pw' };
       jest.spyOn(model, 'find').mockReturnValue({
         exec: jest.fn().mockResolvedValue([dto]),
-      } as any);
+      } as unknown as Query<UserDocument[], UserDocument>);
 
       await expect(service.create(dto)).rejects.toThrow();
     });

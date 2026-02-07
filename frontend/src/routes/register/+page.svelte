@@ -2,71 +2,82 @@
   import { api } from "$lib/api";
   import { login } from "$lib/stores/auth";
   import { goto } from "$app/navigation";
+  import { _ } from "svelte-i18n";
 
-  let username = "";
-  let email = "";
-  let password = "";
-  let error = "";
+  let username = $state("");
+  let email = $state("");
+  let password = $state("");
+  let error = $state("");
 
-  async function handleSubmit() {
+  const handleSubmit = async (e: Event) => {
+    e.preventDefault();
     try {
       await api("POST", "/auth/register", { username, email, password });
-      const res = await api("POST", "/auth/login", { username, password });
+      const res = await api<any>("POST", "/auth/login", { username, password });
       login(res.access_token, res.user);
       goto("/");
-    } catch (e: any) {
-      error = e.message;
+    } catch (e: unknown) {
+      if (e instanceof Error) {
+        error = e.message;
+      } else {
+        error = String(e);
+      }
     }
-  }
+  };
 </script>
 
 <div class="page-container">
   <div class="card">
-    <h1>Create Account</h1>
-    <p class="subtitle">Join and start chatting</p>
+    <h1>{$_("app.title")}</h1>
+    <p class="subtitle">{$_("auth.register_button")}</p>
 
-    <form on:submit|preventDefault={handleSubmit}>
+    <form onsubmit={handleSubmit}>
       {#if error}
         <div class="error-alert">{error}</div>
       {/if}
 
       <div class="form-group">
-        <label for="username">Username</label>
+        <label for="username">{$_("auth.username")}</label>
         <input
           id="username"
           type="text"
           bind:value={username}
           required
-          placeholder="Choose a username"
+          placeholder={$_("auth.username")}
         />
       </div>
 
       <div class="form-group">
-        <label for="email">Email</label>
+        <label for="email">{$_("auth.email")}</label>
         <input
           id="email"
           type="email"
           bind:value={email}
           required
-          placeholder="Enter your email"
+          placeholder={$_("auth.email")}
         />
       </div>
 
       <div class="form-group">
-        <label for="password">Password</label>
+        <label for="password">{$_("auth.password")}</label>
         <input
           id="password"
           type="password"
           bind:value={password}
           required
-          placeholder="Create a password"
+          placeholder={$_("auth.password")}
         />
       </div>
 
-      <button type="submit" class="btn-primary">Sign Up</button>
+      <button type="submit" class="btn-primary"
+        >{$_("auth.register_button")}</button
+      >
 
       <div class="footer">
-        <p>Already have an account? <a href="/login">Sign in</a></p>
+        <p>
+          {$_("auth.have_account")}
+          <a href="/login">{$_("auth.login_button")}</a>
+        </p>
       </div>
     </form>
   </div>

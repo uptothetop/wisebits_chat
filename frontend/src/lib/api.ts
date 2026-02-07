@@ -3,12 +3,21 @@ import { authStore } from './stores/auth';
 
 const BASE_URL = 'http://localhost:3000';
 
-export async function api(
+/**
+ * Makes an authenticated API request.
+ * @param method The HTTP method (GET, POST, etc.)
+ * @param path The API endpoint path (e.g., '/auth/login')
+ * @param data Optional request body data
+ * @param token Optional override token
+ * @returns The response data of type T
+ * @throws Error with message from server if request fails
+ */
+export const api = async <T>(
     method: string,
     path: string,
-    data?: any,
+    data?: unknown,
     token?: string | null
-): Promise<any> {
+): Promise<T> => {
     const store = get(authStore);
     const jwt = token || store.token;
 

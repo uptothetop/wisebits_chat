@@ -3,11 +3,12 @@ import { ChatService } from './chat.service';
 import { getModelToken } from '@nestjs/mongoose';
 import { Conversation } from './schemas/conversation.schema';
 import { Message } from './schemas/message.schema';
+import { Model } from 'mongoose';
 
 describe('ChatService', () => {
   let service: ChatService;
-  let conversationModel: any;
-  let messageModel: any;
+  let conversationModel: Model<Conversation>;
+  let messageModel: Model<Message>;
 
   const mockConversation = {
     _id: 'conv1',
@@ -31,7 +32,8 @@ describe('ChatService', () => {
     constructor: jest.fn().mockReturnValue(mockConversation),
   };
   // Mock constructor
-  function MockConvModel(dto: any) {
+  // function mandated for constructor usage
+  function MockConvModel(this: any, dto: unknown) {
     this.data = dto;
     this.save = jest.fn().mockResolvedValue(this.data);
     this._id = 'conv1';
@@ -44,7 +46,8 @@ describe('ChatService', () => {
     create: jest.fn(),
     new: jest.fn().mockReturnValue(mockMessage),
   };
-  function MockMsgModel(dto: any) {
+  // function mandated for constructor usage
+  function MockMsgModel(this: any, dto: unknown) {
     this.data = dto;
     this.save = jest.fn().mockResolvedValue(this.data);
     this.populate = jest.fn().mockReturnThis();

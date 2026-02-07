@@ -5,7 +5,9 @@ export declare class AuthController {
     constructor(authService: AuthService);
     login(req: any): Promise<{
         access_token: string;
-        user: any;
+        user: import("../users/schemas/user.schema").User & {
+            _id: string;
+        };
     }>;
     register(createUserDto: CreateUserDto): Promise<import("../users/schemas/user.schema").User>;
     getProfile(req: any): any;
