@@ -13,6 +13,18 @@ Feature: Stories (Disappearing Content)
         And "UserB" should see my updated avatar ring in their Stories bar
 
     @happy_path
+    Scenario: Record Story from Camera
+        Given I am logged in as "UserA"
+        When I click the "Record" button in the Stories bar
+        Then the camera modal should open
+        When I grant camera permissions
+        And I start recording
+        And I record for 5 seconds
+        And I stop recording
+        Then the story should be uploaded automatically
+        And my avatar ring in the Stories bar should become active
+
+    @happy_path
     Scenario: View a Story
         Given I am logged in as "UserB"
         And "UserA" has posted a story
@@ -27,6 +39,14 @@ Feature: Stories (Disappearing Content)
         When I attempt to upload a file "document.pdf" as a story
         Then the upload should fail
         And I should see an error message "Unsupported file type"
+
+    @unhappy_path
+    Scenario: Camera Access Denied
+        Given I am logged in as "UserA"
+        When I click the "Record" button in the Stories bar
+        And I deny camera permissions
+        Then I should see a camera permission error
+        And the camera modal should close
 
     @security
     Scenario: Unauthorized Story Deletion

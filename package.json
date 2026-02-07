@@ -9,7 +9,7 @@
         "dev": "concurrently \"pnpm dev:backend\" \"pnpm dev:frontend\" --names \"backend,frontend\" --prefix-colors \"cyan,magenta\"",
         "build:backend": "cd backend && pnpm build",
         "build:frontend": "cd frontend && pnpm build",
-        "build": "pnpm build:backend && pnpm build:frontend",
+        "build": "pnpm build:frontend && pnpm build:backend && mkdir -p backend/frontend-build && cp -r frontend/build/* backend/frontend-build/",
         "test:backend": "cd backend && pnpm test",
         "test:frontend:unit": "cd frontend && pnpm test:unit",
         "test:e2e:playwright": "cd frontend && pnpm build && pnpm preview & sleep 5 && pnpm test:e2e; kill %1",
@@ -19,7 +19,9 @@
         "docker:up": "docker-compose up -d",
         "docker:down": "docker-compose down",
         "docker:restart": "docker-compose restart",
-        "start": "pnpm docker:up && pnpm dev"
+        "docker:build": "docker-compose build",
+        "start": "pnpm build && pnpm docker:build && pnpm docker:up",
+        "start:dev": "docker-compose up mongo -d && concurrently \"pnpm dev:backend\" \"pnpm dev:frontend\" --names \"backend,frontend\" --prefix-colors \"cyan,magenta\""
     },
     "devDependencies": {
         "concurrently": "^9.1.2"

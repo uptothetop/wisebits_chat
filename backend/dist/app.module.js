@@ -27,15 +27,26 @@ exports.AppModule = AppModule = __decorate([
             config_1.ConfigModule.forRoot({ isGlobal: true }),
             mongoose_1.MongooseModule.forRootAsync({
                 imports: [config_1.ConfigModule],
-                useFactory: async (configService) => ({
-                    uri: `mongodb://${configService.get('MONGO_USER')}:${configService.get('MONGO_PASSWORD')}@localhost:27017/chat_db?authSource=admin`,
-                }),
+                useFactory: async (configService) => {
+                    const mongoHost = process.env.NODE_ENV === 'production' ? 'mongo' : 'localhost';
+                    return {
+                        uri: `mongodb://${configService.get('MONGO_USER')}:${configService.get('MONGO_PASSWORD')}@${mongoHost}:27017/chat_db?authSource=admin`,
+                    };
+                },
                 inject: [config_1.ConfigService],
             }),
             serve_static_1.ServeStaticModule.forRoot({
-                rootPath: (0, path_1.join)(__dirname, '..', '..', 'uploads'),
+                rootPath: process.env.NODE_ENV === 'production' ? '/app/uploads' : (0, path_1.join)(__dirname, '..', '..', 'uploads'),
                 serveRoot: '/uploads',
             }),
+            ...(process.env.NODE_ENV === 'production'
+                ? [
+                    serve_static_1.ServeStaticModule.forRoot({
+                        rootPath: (0, path_1.join)(__dirname, '..', 'frontend-build'),
+                        exclude: ['/api*', '/uploads*', '/socket.io*'],
+                    }),
+                ]
+                : []),
             users_module_1.UsersModule,
             auth_module_1.AuthModule,
             chat_module_1.ChatModule,

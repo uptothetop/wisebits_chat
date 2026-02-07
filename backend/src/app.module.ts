@@ -16,15 +16,28 @@ import { StoriesModule } from './stories/stories.module';
     ConfigModule.forRoot({ isGlobal: true }),
     MongooseModule.forRootAsync({
       imports: [ConfigModule],
-      useFactory: async (configService: ConfigService) => ({
-        uri: `mongodb://${configService.get<string>('MONGO_USER')}:${configService.get<string>('MONGO_PASSWORD')}@localhost:27017/chat_db?authSource=admin`,
-      }),
+      useFactory: async (configService: ConfigService) => {
+        const mongoHost = process.env.NODE_ENV === 'production' ? 'mongo' : 'localhost';
+        return {
+          uri: `mongodb://${configService.get<string>('MONGO_USER')}:${configService.get<string>('MONGO_PASSWORD')}@${mongoHost}:27017/chat_db?authSource=admin`,
+        };
+      },
       inject: [ConfigService],
     }),
+    // Serve uploads (stories)
     ServeStaticModule.forRoot({
-      rootPath: join(__dirname, '..', '..', 'uploads'), // Go up from dist/src to root/uploads
+      rootPath: process.env.NODE_ENV === 'production' ? '/app/uploads' : join(__dirname, '..', '..', 'uploads'),
       serveRoot: '/uploads',
     }),
+    // Serve frontend in production
+    ...(process.env.NODE_ENV === 'production'
+      ? [
+        ServeStaticModule.forRoot({
+          rootPath: join(__dirname, '..', 'frontend-build'),
+          exclude: ['/api*', '/uploads*', '/socket.io*'],
+        }),
+      ]
+      : []),
     UsersModule,
     AuthModule,
     ChatModule,
