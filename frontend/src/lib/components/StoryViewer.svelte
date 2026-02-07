@@ -124,10 +124,18 @@
             <!-- Content -->
             <div
                 class="media-content"
+                role="button"
+                tabindex="0"
+                aria-label="Story content. Click left to go back, right to advance."
                 on:click={(e) => {
                     const width = e.currentTarget.offsetWidth;
                     if (e.clientX < width / 3) prevStory();
                     else nextStory();
+                }}
+                on:keydown={(e) => {
+                    if (e.key === "ArrowLeft") prevStory();
+                    else if (e.key === "ArrowRight") nextStory();
+                    else if (e.key === "Escape") close();
                 }}
             >
                 {#if currentStory.type === "video"}

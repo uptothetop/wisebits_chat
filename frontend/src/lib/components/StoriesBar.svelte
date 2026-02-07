@@ -54,16 +54,18 @@
 <div class="stories-bar">
     <!-- Your Story -->
     <div class="story-item">
-        <div
+        <button
+            type="button"
             class="avatar-ring {userStory ? 'active' : ''}"
             on:click={() => (userStory ? openViewer(-1) : fileInput.click())}
+            aria-label={userStory ? "View your story" : "Add your story"}
         >
             {#if !userStory}
                 <div class="add-icon">+</div>
             {:else}
                 <div class="avatar">{userStory.user.username[0]}</div>
             {/if}
-        </div>
+        </button>
         <span class="name">Your Story</span>
         <input
             type="file"
@@ -76,10 +78,15 @@
 
     <!-- Friends Stories -->
     {#each stories as group, i}
-        <div class="story-item" on:click={() => openViewer(i)}>
-            <div class="avatar-ring active">
+        <div class="story-item">
+            <button
+                type="button"
+                class="avatar-ring active"
+                on:click={() => openViewer(i)}
+                aria-label="View {group.user.username}'s story"
+            >
                 <div class="avatar">{group.user.username[0]}</div>
-            </div>
+            </button>
             <span class="name">{group.user.username}</span>
         </div>
     {/each}
@@ -124,6 +131,8 @@
         display: flex;
         align-items: center;
         justify-content: center;
+        background: transparent;
+        cursor: pointer;
     }
     .avatar-ring.active {
         border-color: #e1306c; /* Instagram gradient-like color */
