@@ -11,7 +11,7 @@ export class UsersService {
 
     async create(createUserDto: CreateUserDto): Promise<User> {
         const { username, email, password } = createUserDto;
-        const items = await this.userModel.find({ $or: [{ username }, { email }] });
+        const items = await this.userModel.find({ $or: [{ username }, { email }] }).exec();
         if (items.length > 0) {
             throw new Error('User with this email or username already exists');
         }

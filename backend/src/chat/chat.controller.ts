@@ -30,4 +30,3 @@ export class ChatController {
         return this.chatService.getMessages(id);
     }
 }
-

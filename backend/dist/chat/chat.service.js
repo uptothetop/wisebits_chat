@@ -56,7 +56,7 @@ let ChatService = class ChatService {
     }
     async getMessages(conversationId) {
         return this.messageModel
-            .find({ conversation: conversationId })
+            .find({ conversation: new mongoose_2.Types.ObjectId(conversationId) })
             .populate('sender', 'username')
             .sort({ createdAt: 1 })
             .exec();

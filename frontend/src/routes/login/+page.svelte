@@ -1,68 +1,157 @@
 <script lang="ts">
-  import { api } from '$lib/api';
-  import { login } from '$lib/stores/auth';
-  import { goto } from '$app/navigation';
+  import { api } from "$lib/api";
+  import { login } from "$lib/stores/auth";
+  import { goto } from "$app/navigation";
 
-  let username = '';
-  let password = '';
-  let error = '';
+  let username = "";
+  let password = "";
+  let error = "";
 
   async function handleSubmit() {
     try {
-      const res = await api('POST', '/auth/login', { username, password });
+      const res = await api("POST", "/auth/login", { username, password });
       login(res.access_token, res.user);
-      goto('/');
+      goto("/");
     } catch (e: any) {
       error = e.message;
     }
   }
 </script>
 
-<h1>Login</h1>
+<div class="page-container">
+  <div class="card">
+    <h1>Welcome Back</h1>
+    <p class="subtitle">Sign in to your account</p>
 
-<form on:submit|preventDefault={handleSubmit}>
-  {#if error}
-    <p class="error">{error}</p>
-  {/if}
+    <form on:submit|preventDefault={handleSubmit}>
+      {#if error}
+        <div class="error-alert">{error}</div>
+      {/if}
 
-  <label for="username">
-    Username
-    <input id="username" type="text" bind:value={username} required />
-  </label>
+      <div class="form-group">
+        <label for="username">Username</label>
+        <input
+          id="username"
+          type="text"
+          bind:value={username}
+          required
+          placeholder="Enter your username"
+        />
+      </div>
 
-  <label for="password">
-    Password
-    <input id="password" type="password" bind:value={password} required />
-  </label>
+      <div class="form-group">
+        <label for="password">Password</label>
+        <input
+          id="password"
+          type="password"
+          bind:value={password}
+          required
+          placeholder="Enter your password"
+        />
+      </div>
 
-  <button type="submit">Login</button>
-  <p>Don't have an account? <a href="/register">Register</a></p>
-</form>
+      <button type="submit" class="btn-primary">Sign In</button>
+
+      <div class="footer">
+        <p>Don't have an account? <a href="/register">Create one</a></p>
+      </div>
+    </form>
+  </div>
+</div>
 
 <style>
+  .page-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: calc(100vh - 200px);
+  }
+
+  .card {
+    background: var(--surface-color);
+    padding: 2.5rem;
+    border-radius: 1rem;
+    box-shadow: var(--shadow-md);
+    width: 100%;
+    max-width: 400px;
+    border: 1px solid var(--border-color);
+  }
+
+  h1 {
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+    color: var(--text-main);
+    text-align: center;
+  }
+
+  .subtitle {
+    color: var(--text-secondary);
+    text-align: center;
+    margin-bottom: 2rem;
+  }
+
   form {
     display: flex;
     flex-direction: column;
-    max-width: 300px;
-    margin: 2rem auto;
-    gap: 1rem;
+    gap: 1.5rem;
   }
-  label {
+
+  .form-group {
     display: flex;
     flex-direction: column;
+    gap: 0.5rem;
   }
+
+  label {
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--text-main);
+  }
+
   input {
-    padding: 0.5rem;
-    margin-top: 0.25rem;
+    padding: 0.75rem 1rem;
+    border: 1px solid var(--border-color);
+    border-radius: 0.5rem;
+    font-size: 1rem;
+    transition: all 0.2s;
+    outline: none;
   }
-  button {
-    padding: 0.5rem;
-    background: #007bff;
+
+  input:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+  }
+
+  .btn-primary {
+    padding: 0.75rem;
+    background: var(--primary);
     color: white;
     border: none;
+    border-radius: 0.5rem;
+    font-weight: 600;
+    font-size: 1rem;
     cursor: pointer;
+    transition: background-color 0.2s;
+    margin-top: 0.5rem;
   }
-  .error {
-    color: red;
+
+  .btn-primary:hover {
+    background: var(--primary-hover);
+  }
+
+  .error-alert {
+    background: #fef2f2;
+    color: #dc2626;
+    padding: 0.75rem;
+    border-radius: 0.5rem;
+    font-size: 0.875rem;
+    border: 1px solid #fee2e2;
+  }
+
+  .footer {
+    text-align: center;
+    font-size: 0.875rem;
+    color: var(--text-secondary);
   }
 </style>

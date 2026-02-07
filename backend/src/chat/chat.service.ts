@@ -52,7 +52,7 @@ export class ChatService {
 
     async getMessages(conversationId: string) {
         return this.messageModel
-            .find({ conversation: conversationId })
+            .find({ conversation: new Types.ObjectId(conversationId) })
             .populate('sender', 'username')
             .sort({ createdAt: 1 })
             .exec();

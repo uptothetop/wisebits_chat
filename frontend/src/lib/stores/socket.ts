@@ -1,4 +1,4 @@
-import { io, Socket } from 'socket.io-client';
+import { io, type Socket } from "socket.io-client";
 import { writable, get } from 'svelte/store';
 import { authStore } from './auth';
 
