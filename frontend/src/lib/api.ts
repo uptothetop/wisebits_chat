@@ -12,9 +12,10 @@ export async function api(
     const store = get(authStore);
     const jwt = token || store.token;
 
-    const headers: HeadersInit = {
-        'Content-Type': 'application/json',
-    };
+    const headers: HeadersInit = {};
+    if (!(data instanceof FormData)) {
+        headers['Content-Type'] = 'application/json';
+    }
 
     if (jwt) {
         headers['Authorization'] = `Bearer ${jwt}`;
@@ -23,7 +24,7 @@ export async function api(
     const res = await fetch(`${BASE_URL}${path}`, {
         method,
         headers,
-        body: data ? JSON.stringify(data) : undefined,
+        body: data instanceof FormData ? data : (data ? JSON.stringify(data) : undefined),
     });
 
     if (!res.ok) {

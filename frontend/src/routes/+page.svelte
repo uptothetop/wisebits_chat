@@ -9,6 +9,7 @@
     } from "$lib/stores/socket";
     import { goto } from "$app/navigation";
     import { derived, get, writable } from "svelte/store";
+    import StoriesBar from "$lib/components/StoriesBar.svelte";
 
     let conversations: any[] = [];
     let activeConversation: any = null;
@@ -65,8 +66,7 @@
     function handleIncomingMessage(msg: any) {
         // If active conversation matches, append to messages
         if (activeConversation && msg.conversation === activeConversation._id) {
-            activeMessages = [...activeMessages, msg]; // Svelte 5 reactivity might need explicit assignment or mutable state (Runes).
-            // If we are using legacy mode (no runes), assignment triggers update.
+            activeMessages = [...activeMessages, msg];
             scrollToBottom();
         }
 
@@ -99,8 +99,6 @@
 
         const socket = get(socketStore);
         if (socket) {
-            // Optimistic upate? No, waiting for server ack (receiveMessage) is safer for consistence.
-            // But we can clear input immediately.
             socket.emit("sendMessage", {
                 recipientId: recipient._id,
                 content: messageInput,
@@ -168,6 +166,8 @@
                 {showSearch ? "Cancel" : "New Chat"}
             </button>
         </div>
+
+        <StoriesBar />
 
         {#if showSearch}
             <div class="search-area">
@@ -251,7 +251,6 @@
         {/if}
     </div>
 </div>
-```
 
 <style>
     .container {
@@ -303,6 +302,7 @@
         border: none;
         background: none;
         font-size: 0.9rem;
+        color: var(--text-main); /* Fix white text on white bg */
     }
     .result-item:hover {
         background: var(--bg-color);
