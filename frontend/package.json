@@ -11,15 +11,16 @@
 		"check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
 		"check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
 		"test:unit": "vitest",
-		"test": "npm run test:unit -- --run && npm run test:e2e",
+		"test": "pnpm run test:unit -- --run && pnpm run test:e2e",
 		"test:e2e": "playwright test",
-		"test:bdd": "cucumber-js ../bdd/**/*.feature --require-module ts-node/register --require 'e2e/step-definitions/**/*.ts' --format progress --format html:cucumber-report.html"
+		"test:bdd": "cucumber-js ../bdd/**/*.feature --import 'e2e/step-definitions/**/*.ts' --format progress --format html:cucumber-report.html"
 	},
 	"devDependencies": {
 		"@cucumber/cucumber": "^12.6.0",
 		"@cucumber/playwright": "^3.1.0",
 		"@playwright/test": "^1.58.1",
 		"@sveltejs/adapter-auto": "^7.0.0",
+		"@sveltejs/adapter-static": "^3.0.10",
 		"@sveltejs/kit": "^2.50.2",
 		"@sveltejs/vite-plugin-svelte": "^6.2.4",
 		"@types/node": "^25.2.1",

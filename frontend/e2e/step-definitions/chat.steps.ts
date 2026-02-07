@@ -1,5 +1,6 @@
 import { Given, When, Then } from '@cucumber/cucumber';
 import { expect } from '@playwright/test';
+import { Page, Locator } from 'playwright';
 
 // Chat-specific Given steps
 Given('I am logged in as {string}', async function (username: string) {

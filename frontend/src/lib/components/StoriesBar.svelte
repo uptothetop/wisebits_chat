@@ -212,7 +212,14 @@
 
 <!-- Camera Modal -->
 {#if showCameraModal}
-    <div class="camera-modal" on:click|self={closeCamera}>
+    <div
+        class="camera-modal"
+        role="dialog"
+        aria-modal="true"
+        on:click|self={closeCamera}
+        on:keydown={(e) => e.key === "Escape" && closeCamera()}
+        tabindex="-1"
+    >
         <div class="camera-container">
             <video
                 bind:this={videoPreview}
