@@ -3,5 +3,4 @@
 **/.env
 **/frontend-build
 **/frontend-builds
-backend/dist/**
 backend/frontend-build/**
