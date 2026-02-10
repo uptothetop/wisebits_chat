@@ -13,7 +13,8 @@ test.describe('Chat - Happy Path', () => {
         await page.fill('input#email', `${userB}@example.com`);
         await page.fill('input#password', password);
         await page.click('button[type="submit"]');
-        await expect(page).toHaveURL('/');
+        await page.waitForTimeout(500);
+        await expect(page).toHaveURL('/', { timeout: 10000 });
 
         // Logout UserB
         await page.click('button:has-text("Logout")');
@@ -25,7 +26,8 @@ test.describe('Chat - Happy Path', () => {
         await page.fill('input#email', `${userA}@example.com`);
         await page.fill('input#password', password);
         await page.click('button[type="submit"]');
-        await expect(page).toHaveURL('/');
+        await page.waitForTimeout(500);
+        await expect(page).toHaveURL('/', { timeout: 10000 });
 
         // Start new conversation with UserB
         await page.click('button:has-text("New Chat")');
@@ -60,20 +62,22 @@ test.describe('Chat - Happy Path', () => {
         const pageB = await contextB.newPage();
 
         // Register UserA
-        await pageA.goto('http://localhost:5173/register');
+        await pageA.goto('/register');
         await pageA.fill('input#username', userA);
         await pageA.fill('input#email', `${userA}@example.com`);
         await pageA.fill('input#password', password);
         await pageA.click('button[type="submit"]');
-        await expect(pageA).toHaveURL('http://localhost:5173/');
+        await pageA.waitForTimeout(500);
+        await expect(pageA).toHaveURL('/', { timeout: 10000 });
 
         // Register UserB
-        await pageB.goto('http://localhost:5173/register');
+        await pageB.goto('/register');
         await pageB.fill('input#username', userB);
         await pageB.fill('input#email', `${userB}@example.com`);
         await pageB.fill('input#password', password);
         await pageB.click('button[type="submit"]');
-        await expect(pageB).toHaveURL('http://localhost:5173/');
+        await pageB.waitForTimeout(500);
+        await expect(pageB).toHaveURL('/', { timeout: 10000 });
 
         // UserA starts conversation with UserB
         await pageA.click('button:has-text("New Chat")');

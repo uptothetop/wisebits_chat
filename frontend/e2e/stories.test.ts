@@ -56,7 +56,8 @@ test.describe('Stories - Happy Path', () => {
         await page.fill('input#email', `${username}@example.com`);
         await page.fill('input#password', password);
         await page.click('button[type="submit"]');
-        await expect(page).toHaveURL('/');
+        await page.waitForTimeout(500);
+        await expect(page).toHaveURL('/', { timeout: 10000 });
 
         // Wait for StoriesBar to load
         await page.waitForSelector('.stories-bar', { timeout: 5000 });

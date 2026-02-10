@@ -12,7 +12,7 @@
         "build": "pnpm run build:frontend && pnpm run build:backend && mkdir -p backend/frontend-build && cp -r frontend/build/* backend/frontend-build/",
         "test:backend": "pnpm --filter backend test",
         "test:frontend:unit": "pnpm --filter frontend run test:unit",
-        "test:e2e:playwright": "pnpm --filter frontend run test:e2e",
+        "test:e2e:playwright": "docker-compose up mongo -d && (pnpm --filter backend run start:dev & sleep 5 && pnpm --filter frontend run test:e2e; EXIT_CODE=$?; pkill -f 'nest start'; exit $EXIT_CODE)",
         "test:db:up": "docker-compose -f docker-compose.test.yml up -d",
         "test:db:down": "docker-compose -f docker-compose.test.yml down -v",
         "test:db:seed": "pnpm --filter backend run test:db:seed",

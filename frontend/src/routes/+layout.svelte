@@ -24,6 +24,16 @@
 		{ code: "eo", label: "💚 EO" },
 	];
 
+	// Initialize locale from localStorage on client side
+	$effect(() => {
+		if (typeof window !== "undefined" && !$locale) {
+			const saved = localStorage.getItem("locale");
+			if (saved) {
+				locale.set(saved);
+			}
+		}
+	});
+
 	function handleLogout() {
 		logout();
 		goto("/login");

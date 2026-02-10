@@ -6,7 +6,13 @@ register('es', () => import('./locales/es.json'));
 register('is', () => import('./locales/is.json'));
 register('eo', () => import('./locales/eo.json'));
 
+// Get initial locale from localStorage or browser
+const savedLocale = typeof localStorage !== 'undefined' ? localStorage.getItem('locale') : null;
+const browserLocale = getLocaleFromNavigator();
+// Normalize locale (e.g., "en-US" -> "en")
+const normalizedBrowserLocale = browserLocale?.split('-')[0];
+
 init({
     fallbackLocale: 'en',
-    initialLocale: getLocaleFromNavigator(),
+    initialLocale: savedLocale || normalizedBrowserLocale || 'en',
 });
