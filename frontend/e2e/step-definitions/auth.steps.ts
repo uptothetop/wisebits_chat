@@ -1,5 +1,6 @@
 import { Given, When, Then, Before, After } from '@cucumber/cucumber';
-import { chromium, Browser, Page, BrowserContext } from 'playwright';
+import { chromium } from 'playwright';
+import type { Browser, Page, BrowserContext } from 'playwright';
 import { expect } from '@playwright/test';
 
 let browser: Browser;

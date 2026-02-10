@@ -1,6 +1,6 @@
 import { Given, When, Then } from '@cucumber/cucumber';
 import { expect } from '@playwright/test';
-import { Page, Locator } from 'playwright';
+import type { Page, Locator } from 'playwright';
 
 // Stories Given steps
 Given('{string} has posted a story', async function (username: string) {
