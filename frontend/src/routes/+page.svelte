@@ -177,7 +177,10 @@
     <div class="sidebar">
         <div class="header">
             <h2>{$_("app.title")}</h2>
-            <button onclick={() => (showSearch = !showSearch)}>
+            <button
+                data-testid="new-chat-button"
+                onclick={() => (showSearch = !showSearch)}
+            >
                 {showSearch ? $_("chat.select_chat") : $_("chat.new_chat")}
             </button>
         </div>
@@ -187,6 +190,7 @@
         {#if showSearch}
             <div class="search-area">
                 <input
+                    data-testid="search-input"
                     bind:value={searchQuery}
                     oninput={handleSearch}
                     placeholder={$_("chat.search_placeholder")}
@@ -195,6 +199,7 @@
                     {#each searchResults as user}
                         <button
                             class="result-item"
+                            data-testid="user-result-{user.username}"
                             onclick={() => startChat(user)}
                         >
                             {user.username}
@@ -232,7 +237,7 @@
 
     <div class="main">
         {#if activeConversation}
-            <div class="chat-header">
+            <div class="chat-header" data-testid="chat-header">
                 {getOtherUser(activeConversation)?.username}
             </div>
             <div class="message-list" id="message-list">
@@ -240,6 +245,7 @@
                     <div
                         class="message"
                         class:own={getSenderId(msg) === $authStore.user?._id}
+                        data-testid="message-bubble"
                     >
                         <div class="bubble">
                             {#if getSenderId(msg) !== $authStore.user?._id}
@@ -254,11 +260,14 @@
             </div>
             <div class="input-area">
                 <input
+                    data-testid="message-input"
                     bind:value={messageInput}
                     onkeydown={(e) => e.key === "Enter" && handleSendMessage()}
                     placeholder={$_("chat.type_message")}
                 />
-                <button onclick={handleSendMessage}>{$_("chat.send")}</button>
+                <button data-testid="send-button" onclick={handleSendMessage}
+                    >{$_("chat.send")}</button
+                >
             </div>
         {:else}
             <div class="empty-state">

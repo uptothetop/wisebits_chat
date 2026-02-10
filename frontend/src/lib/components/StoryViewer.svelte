@@ -97,7 +97,7 @@
 </script>
 
 {#if currentStory}
-    <div class="viewer-overlay">
+    <div class="viewer-overlay" data-testid="story-viewer">
         <div class="story-container">
             <!-- Header -->
             <div class="user-info">

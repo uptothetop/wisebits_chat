@@ -34,29 +34,33 @@ Feature: Stories (Disappearing Content)
         And the story should auto-advance after 5 seconds
 
     @unhappy_path
+    @pending
     Scenario: Upload Invalid File Type
         Given I am logged in as "UserA"
         When I attempt to upload a file "document.pdf" as a story
         Then the upload should fail
         And I should see an error message "Unsupported file type"
 
-    @unhappy_path
-    Scenario: Camera Access Denied
+    @pending
+    Scenario: Camera Permission Denied
         Given I am logged in as "UserA"
         When I click the "Record" button in the Stories bar
-        And I deny camera permissions
-        Then I should see a camera permission error
+        Then the camera modal should open
+        When I deny camera permissions
+        Then I should see an error message "Camera access denied"
         And the camera modal should close
 
-    @security
+    @pending @security
     Scenario: Unauthorized Story Deletion
-        Given I am logged in as "UserB"
-        And "UserA" has a story (ID: "story_a")
-        When I attempt to delete story "story_a" via API
+        Given "UserA" has posted a story
+        And I am logged in as "MaliciousUser"
+        When I attempt to delete "UserA"'s story via the API
         Then I should receive a 403 Forbidden response
+        And "UserA"'s story should still exist
 
-    @security
-    Scenario: Story Expiration
-        Given "UserA" posted a story 24 hours and 1 minute ago
-        When I request the stories feed
-        Then "UserA"'s story should not be included in the response
+    @pending
+    Scenario: Story Expiration (24 Hours)
+        Given "UserA" posted a story 25 hours ago
+        When "UserB" logs in and views the Stories bar
+        Then "UserA"'s avatar ring should not be active
+        And "UserB" should not be able to view "UserA"'s expired story

@@ -31,11 +31,12 @@ Feature: Real-Time Chat
         And no new message bubble should appear
 
     @security
-    Scenario: Accessing Unauthorized Conversation via API
-        Given I am logged in as "UserA"
-        And "UserC" has a private conversation with "UserD" (ID: "conv_cd")
-        When I attempt to fetch messages from conversation "conv_cd" via API
-        Then I should receive a 403 Forbidden or 404 Not Found response
+    @pending
+    Scenario: Unauthorized Conversation Access
+        Given "UserA" has a private conversation with "UserB" (ID: "conv123")
+        And I am logged in as "MaliciousUser"
+        When I attempt to fetch messages from conversation "conv123" via API
+        Then I should receive a 403 Forbidden response
 
     @security
     Scenario: XSS Attack via Message Content

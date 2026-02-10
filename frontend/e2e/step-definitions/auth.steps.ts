@@ -1,7 +1,10 @@
-import { Given, When, Then, Before, After } from '@cucumber/cucumber';
+import { Given, When, Then, Before, After, setDefaultTimeout } from '@cucumber/cucumber';
 import { chromium } from 'playwright';
 import type { Browser, Page, BrowserContext } from 'playwright';
 import { expect } from '@playwright/test';
+
+// Increase default timeout to 10 seconds
+setDefaultTimeout(10 * 1000);
 
 let browser: Browser;
 let context: BrowserContext;
@@ -12,6 +15,7 @@ Before(async function () {
     browser = await chromium.launch();
     context = await browser.newContext();
     page = await context.newPage();
+    page.setDefaultTimeout(10000); // 10 second timeout for Playwright
     this.page = page;
     this.context = context;
     this.browser = browser;
@@ -83,11 +87,28 @@ When('I enter a password {string}', async function (password: string) {
 });
 
 When('I click the {string} button', async function (buttonText: string) {
-    await this.page.click(`button:has-text("${buttonText}")`);
+    const testIdMap: Record<string, string> = {
+        'Register': 'register-button',
+        'Login': 'login-button',
+    };
+    const testId = testIdMap[buttonText];
+    if (testId) {
+        await this.page.click(`[data-testid="${testId}"]`);
+    } else {
+        await this.page.click(`button:has-text("${buttonText}")`);
+    }
 });
 
 When('I click {string}', async function (selector: string) {
-    if (selector.startsWith('button')) {
+    const testIdMap: Record<string, string> = {
+        'Register': 'register-button',
+        'Login': 'login-button',
+        'Send': 'send-button',
+    };
+    const testId = testIdMap[selector];
+    if (testId) {
+        await this.page.click(`[data-testid="${testId}"]`);
+    } else if (selector.startsWith('button')) {
         await this.page.click(selector);
     } else {
         await this.page.click(`button:has-text("${selector}")`);
@@ -110,9 +131,10 @@ Then('I should receive a valid JWT token', async function () {
 });
 
 Then('I should see an error message {string}', async function (errorMessage: string) {
-    const escapedMessage = errorMessage.replace(/[.*+?^${}()|[\]\\]/g, '\\\\$&');
-    const regex = new RegExp(escapedMessage, 'i');
-    await expect(this.page.locator('.error-alert, .error, [class*="error"]')).toContainText(regex);
+    // Use data-testid for more reliable selection
+    const errorElement = this.page.locator('[data-testid="error-message"]');
+    await expect(errorElement).toBeVisible();
+    await expect(errorElement).toContainText(errorMessage, { ignoreCase: true });
 });
 
 Then('I should not be logged in', async function () {

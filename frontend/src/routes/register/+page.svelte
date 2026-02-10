@@ -33,7 +33,7 @@
 
     <form onsubmit={handleSubmit}>
       {#if error}
-        <div class="error-alert">{error}</div>
+        <div class="error-alert" data-testid="error-message">{error}</div>
       {/if}
 
       <div class="form-group">
@@ -69,7 +69,7 @@
         />
       </div>
 
-      <button type="submit" class="btn-primary"
+      <button type="submit" class="btn-primary" data-testid="register-button"
         >{$_("auth.register_button")}</button
       >
 

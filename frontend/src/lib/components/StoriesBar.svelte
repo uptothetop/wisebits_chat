@@ -185,6 +185,9 @@
             <button
                 type="button"
                 class="avatar-ring {userStory ? 'active' : ''}"
+                data-testid={userStory
+                    ? "view-story-button"
+                    : "add-story-button"}
                 onclick={() => (userStory ? openViewer(-1) : fileInput.click())}
                 aria-label={userStory
                     ? $_("stories.view_story")
@@ -224,6 +227,7 @@
         <!-- Camera Button -->
         <button
             class="camera-btn"
+            data-testid="camera-button"
             onclick={openCamera}
             aria-label={$_("camera.open_camera")}
         >
@@ -236,6 +240,7 @@
 {#if showCameraModal}
     <div
         class="camera-modal"
+        data-testid="camera-modal"
         role="dialog"
         aria-modal="true"
         onclick={(e) => e.target === e.currentTarget && closeCamera()}
@@ -253,11 +258,19 @@
 
             <div class="camera-controls">
                 {#if !isRecording}
-                    <button class="record-btn" onclick={startRecording}>
+                    <button
+                        class="record-btn"
+                        data-testid="record-button"
+                        onclick={startRecording}
+                    >
                         {$_("camera.start_recording")}
                     </button>
                 {:else}
-                    <button class="stop-btn" onclick={stopRecording}>
+                    <button
+                        class="stop-btn"
+                        data-testid="stop-button"
+                        onclick={stopRecording}
+                    >
                         <div class="stop-icon"></div>
                         {formatTime(recordingTime)}
                     </button>

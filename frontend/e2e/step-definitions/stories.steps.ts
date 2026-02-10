@@ -20,14 +20,21 @@ Given('{string} posted a story {int} hours and {int} minute ago', async function
 
 // Stories When steps
 When('I click the {string} button in the sidebar', async function (buttonText: string) {
-    const button = this.page.locator(`button:has-text("${buttonText}")`).first();
-    await button.click();
+    if (buttonText === 'Add Story') {
+        await this.page.click('[data-testid="add-story-button"]');
+    } else {
+        const button = this.page.locator(`button:has-text("${buttonText}")`).first();
+        await button.click();
+    }
 });
 
 When('I click the {string} button in the Stories bar', async function (buttonText: string) {
-    // Find button by aria-label or text content
-    const button = this.page.locator(`.stories-bar button:has-text("${buttonText}"), .stories-bar button[aria-label*="${buttonText}"]`).first();
-    await button.click();
+    if (buttonText === 'Record') {
+        await this.page.click('[data-testid="camera-button"]');
+    } else {
+        const button = this.page.locator(`.stories-bar button:has-text("${buttonText}"), .stories-bar button[aria-label*="${buttonText}"]`).first();
+        await button.click();
+    }
     await this.page.waitForTimeout(500);
 });
 
@@ -64,7 +71,7 @@ When('I deny camera permissions', async function () {
 });
 
 When('I start recording', async function () {
-    const recordBtn = this.page.locator('.record-btn');
+    const recordBtn = this.page.locator('[data-testid="record-button"]');
     await recordBtn.click();
     await this.page.waitForTimeout(500);
 });
@@ -74,7 +81,7 @@ When('I record for {int} seconds', async function (seconds: number) {
 });
 
 When('I stop recording', async function () {
-    const stopBtn = this.page.locator('.stop-btn');
+    const stopBtn = this.page.locator('[data-testid="stop-button"]');
     await stopBtn.click();
     await this.page.waitForTimeout(1000);
 });
@@ -97,11 +104,11 @@ When('I request the stories feed', async function () {
 
 // Stories Then steps
 Then('the camera modal should open', async function () {
-    await expect(this.page.locator('.camera-modal')).toBeVisible();
+    await expect(this.page.locator('[data-testid="camera-modal"]')).toBeVisible();
 });
 
 Then('the camera modal should close', async function () {
-    await expect(this.page.locator('.camera-modal')).not.toBeVisible();
+    await expect(this.page.locator('[data-testid="camera-modal"]')).not.toBeVisible();
 });
 
 Then('the story should be uploaded automatically', async function () {
@@ -124,7 +131,7 @@ Then('{string} should see my updated avatar ring in their Stories bar', async fu
 });
 
 Then('the Story Viewer modal should open', async function () {
-    await expect(this.page.locator('.viewer-overlay, .story-viewer')).toBeVisible();
+    await expect(this.page.locator('[data-testid="story-viewer"]')).toBeVisible();
 });
 
 Then(/^I should see "([^"]*)"'s story content$/, async function (username: string) {
@@ -140,10 +147,8 @@ Then('the upload should fail', async function () {
     // Verify no active story ring or check for error
 });
 
-Then('I should see an error message {string}', async function (errorMessage: string) {
-    // Check for alert or error message
-    // This might be browser alert or on-page error
-});
+// NOTE: Error message step removed - using shared step from auth.steps.ts
+// The step "I should see an error message {string}" is defined in auth.steps.ts
 
 Then('I should receive a {int} Forbidden response', async function (statusCode: number) {
     expect(this.apiResponse?.status).toBe(statusCode);
