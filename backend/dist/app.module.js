@@ -28,10 +28,15 @@ exports.AppModule = AppModule = __decorate([
             mongoose_1.MongooseModule.forRootAsync({
                 imports: [config_1.ConfigModule],
                 useFactory: async (configService) => {
+                    const mongoUri = process.env.MONGODB_URI;
+                    if (mongoUri) {
+                        console.log('📊 Connecting to MongoDB:', mongoUri.replace(/\/\/.*@/, '//*****@'));
+                        return { uri: mongoUri };
+                    }
                     const mongoHost = process.env.NODE_ENV === 'production' ? 'mongo' : 'localhost';
-                    return {
-                        uri: `mongodb://${configService.get('MONGO_USER')}:${configService.get('MONGO_PASSWORD')}@${mongoHost}:27017/chat_db?authSource=admin`,
-                    };
+                    const uri = `mongodb://${configService.get('MONGO_USER')}:${configService.get('MONGO_PASSWORD')}@${mongoHost}:27017/chat_db?authSource=admin`;
+                    console.log('📊 Connecting to MongoDB:', uri.replace(/\/\/.*@/, '//*****@'));
+                    return { uri };
                 },
                 inject: [config_1.ConfigService],
             }),

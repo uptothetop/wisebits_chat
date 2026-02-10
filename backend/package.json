@@ -12,6 +12,8 @@
     "start:dev": "nest start --watch",
     "start:debug": "nest start --debug --watch",
     "start:prod": "node dist/main",
+    "start:test": "MONGODB_URI=mongodb://test:test123@localhost:27018/wisebits_test?authSource=admin nest start",
+    "test:db:seed": "ts-node test/setup.ts",
     "lint": "eslint \"{src,apps,libs,test}/**/*.ts\" --fix",
     "test": "jest",
     "test:watch": "jest --watch",

@@ -17,10 +17,19 @@ import { StoriesModule } from './stories/stories.module';
     MongooseModule.forRootAsync({
       imports: [ConfigModule],
       useFactory: async (configService: ConfigService) => {
+        // Check for explicit MONGODB_URI (for tests)
+        const mongoUri = process.env.MONGODB_URI;
+
+        if (mongoUri) {
+          console.log('📊 Connecting to MongoDB:', mongoUri.replace(/\/\/.*@/, '//*****@'));
+          return { uri: mongoUri };
+        }
+
+        // Default: production or dev database
         const mongoHost = process.env.NODE_ENV === 'production' ? 'mongo' : 'localhost';
-        return {
-          uri: `mongodb://${configService.get<string>('MONGO_USER')}:${configService.get<string>('MONGO_PASSWORD')}@${mongoHost}:27017/chat_db?authSource=admin`,
-        };
+        const uri = `mongodb://${configService.get<string>('MONGO_USER')}:${configService.get<string>('MONGO_PASSWORD')}@${mongoHost}:27017/chat_db?authSource=admin`;
+        console.log('📊 Connecting to MongoDB:', uri.replace(/\/\/.*@/, '//*****@'));
+        return { uri };
       },
       inject: [ConfigService],
     }),

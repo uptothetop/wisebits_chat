@@ -2,57 +2,27 @@ import { Given, When, Then } from '@cucumber/cucumber';
 import { expect } from '@playwright/test';
 import type { Page, Locator } from 'playwright';
 
-// Global test user registry to track created users
-const testUsers: Record<string, string> = {};
-
-// Helper to create a test user via registration
-async function createTestUser(page: Page, username: string): Promise<string> {
-    const timestamp = Date.now();
-    const actualUsername = `${username}_${timestamp}`;
-    const password = 'password123';
-
-    // Open a new page for registration (to avoid losing current page state)
-    const newPage = await page.context().newPage();
-    await newPage.goto('http://localhost:4173/register');
-    await newPage.fill('input#username', actualUsername);
-    await newPage.fill('input#email', `${actualUsername}@example.com`);
-    await newPage.fill('input#password', password);
-    await newPage.click('[data-testid="register-button"]');
-    await newPage.waitForURL('http://localhost:4173/');
-    await newPage.close();
-
-    // Store in registry
-    testUsers[username] = actualUsername;
-    return actualUsername;
-}
+// No need for dynamic user creation - users exist in test database!
 
 // Chat-specific Given steps
 Given('I am logged in as {string}', async function (username: string) {
-    const actualUsername = await createTestUser(this.page, username);
-    this.currentUser = actualUsername;
+    // User already exists in test database - just login!
+    this.currentUser = username;
 
-    // Now login with the created user
-    await this.page.goto('http://localhost:4173/register');
-    await this.page.fill('input#username', actualUsername);
-    await this.page.fill('input#email', `${actualUsername}@example.com`);
+    await this.page.goto('http://localhost:4173/login');
+    await this.page.fill('input#username', username);
     await this.page.fill('input#password', 'password123');
-    await this.page.click('[data-testid="register-button"]');
-    await expect(this.page).toHaveURL('http://localhost:4173/');
+    await this.page.click('[data-testid="login-button"]');
+    await expect(this.page).toHaveURL('http://localhost:4173/', { timeout: 10000 });
 });
 
 Given('I have an active conversation with {string}', async function (username: string) {
-    // Create the target user if they don't exist
-    let targetUsername = testUsers[username];
-    if (!targetUsername) {
-        targetUsername = await createTestUser(this.page, username);
-    }
-
-    // Start new chat
+    // User already exists in database - just search and click
     await this.page.click('[data-testid="new-chat-button"]');
-    await this.page.fill('[data-testid="search-input"]', targetUsername);
-    await this.page.waitForTimeout(1000); // Give search time to complete
-    await this.page.click(`[data-testid="user-result-${targetUsername}"]`);
-    await expect(this.page.locator('[data-testid="chat-header"]')).toContainText(targetUsername, { timeout: 10000 });
+    await this.page.fill('[data-testid="search-input"]', username);
+    await this.page.waitForTimeout(1000);
+    await this.page.click(`[data-testid="user-result-${username}"]`);
+    await expect(this.page.locator('[data-testid="chat-header"]')).toContainText(username, { timeout: 10000 });
 });
 
 Given('{string} has a private conversation with {string} \\(ID: {string}\\)', async function (user1: string, user2: string, convId: string) {
@@ -61,22 +31,15 @@ Given('{string} has a private conversation with {string} \\(ID: {string}\\)', as
 
 // Chat When steps
 When('I search for {string}', async function (username: string) {
-    // Create the user if they don't exist yet
-    let targetUsername = testUsers[username];
-    if (!targetUsername) {
-        targetUsername = await createTestUser(this.page, username);
-    }
-
-    this.searchUser = targetUsername;
+    // User exists in database
+    this.searchUser = username;
     await this.page.click('[data-testid="new-chat-button"]');
-    await this.page.fill('[data-testid="search-input"]', targetUsername);
-    await this.page.waitForTimeout(1000); // Give search time to complete
+    await this.page.fill('[data-testid="search-input"]', username);
+    await this.page.waitForTimeout(1000);
 });
 
 When('I click on {string} in the search results', async function (username: string) {
-    // Use the actual username from testUsers if it exists
-    const targetUsername = testUsers[username] || username;
-    await this.page.click(`[data-testid="user-result-${targetUsername}"]`);
+    await this.page.click(`[data-testid="user-result-${username}"]`);
     await this.page.waitForTimeout(500);
 });
 
@@ -113,16 +76,12 @@ Then('the chat window for {string} should be active', async function (username: 
 });
 
 Then('a new conversation with {string} should appear in the sidebar', async function (username: string) {
-    // The conversation should now be visible in the sidebar
-    const targetUsername = testUsers[username] || username;
-    const conversationItem = this.page.locator(`.conversation-item:has-text("${targetUsername}"), .conversations button:has-text("${targetUsername}")`);
+    const conversationItem = this.page.locator(`.conversation-item:has-text("${username}"), .conversations button:has-text("${username}")`);
     await expect(conversationItem.first()).toBeVisible({ timeout: 10000 });
 });
 
 Then('the chat window for {string} should be active', async function (username: string) {
-    // Chat header should show the username
-    const targetUsername = testUsers[username] || username;
-    await expect(this.page.locator('[data-testid="chat-header"]')).toContainText(targetUsername, { timeout: 10000 });
+    await expect(this.page.locator('[data-testid="chat-header"]')).toContainText(username, { timeout: 10000 });
 });
 
 Then('the message {string} should appear in my chat window', async function (message: string) {
