@@ -1,0 +1,43 @@
+{
+    "app": {
+        "title": "Wisebits Чат"
+    },
+    "nav": {
+        "home": "Главная",
+        "login": "Войти",
+        "register": "Регистрация",
+        "logout": "Выйти"
+    },
+    "stories": {
+        "your_story": "Ваша история",
+        "add_story": "Добавить историю",
+        "view_story": "Смотреть историю",
+        "camera_permission_denied": "Пожалуйста, разрешите доступ к камере для записи историй",
+        "upload_failed": "Не удалось загрузить историю"
+    },
+    "chat": {
+        "search_placeholder": "Поиск пользователей...",
+        "new_chat": "Новый чат",
+        "type_message": "Введите сообщение...",
+        "send": "Отправить",
+        "select_chat": "Выберите чат, чтобы начать общение",
+        "online": "В сети",
+        "offline": "Не в сети"
+    },
+    "auth": {
+        "username": "Имя пользователя",
+        "email": "Email",
+        "password": "Пароль",
+        "login_button": "Войти",
+        "register_button": "Зарегистрироваться",
+        "have_account": "Уже есть аккаунт? Войти",
+        "no_account": "Нет аккаунта? Зарегистрироваться",
+        "login_success": "Вход выполнен успешно!",
+        "register_success": "Регистрация успешна! Пожалуйста, войдите."
+    },
+    "camera": {
+        "start_recording": "Начать запись",
+        "stop_recording": "Остановить запись",
+        "uploading": "Загрузка..."
+    }
+}

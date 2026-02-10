@@ -1,0 +1,15 @@
+version: '3.8'
+
+services:
+  mongo-test:
+    image: mongo:latest
+    container_name: wisebits-mongo-test
+    ports:
+      - "27018:27017"  # Different port from production!
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: test
+      MONGO_INITDB_ROOT_PASSWORD: test123
+      MONGO_INITDB_DATABASE: wisebits_test
+    tmpfs:
+      - /data/db  # In-memory for speed - data lost on stop
+    command: mongod --quiet --logpath /dev/null

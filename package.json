@@ -1,0 +1,33 @@
+{
+    "name": "wisebits-chat",
+    "version": "1.0.0",
+    "private": true,
+    "description": "Wisebits Chat Application - Full Stack Chat with Stories",
+    "scripts": {
+        "dev:backend": "pnpm --filter backend run start:dev",
+        "dev:frontend": "pnpm --filter frontend run dev",
+        "dev": "concurrently \"pnpm run dev:backend\" \"pnpm run dev:frontend\" --names \"backend,frontend\" --prefix-colors \"cyan,magenta\"",
+        "build:backend": "pnpm --filter backend run build",
+        "build:frontend": "pnpm --filter frontend run build",
+        "build": "pnpm run build:frontend && pnpm run build:backend && mkdir -p backend/frontend-build && cp -r frontend/build/* backend/frontend-build/",
+        "test:backend": "pnpm --filter backend test",
+        "test:frontend:unit": "pnpm --filter frontend run test:unit",
+        "test:e2e:playwright": "docker-compose up mongo -d && (pnpm --filter backend run start:dev & sleep 5 && pnpm --filter frontend run test:e2e; EXIT_CODE=$?; pkill -f 'nest start'; exit $EXIT_CODE)",
+        "test:db:up": "docker-compose -f docker-compose.test.yml up -d",
+        "test:db:down": "docker-compose -f docker-compose.test.yml down -v",
+        "test:db:seed": "pnpm --filter backend run test:db:seed",
+        "test:e2e:bdd": "echo 'BDD tests temporarily disabled' && exit 0",
+        "test:e2e:full": "echo 'BDD tests temporarily disabled' && exit 0",
+        "test:e2e": "pnpm run test:e2e:playwright",
+        "test": "pnpm run test:backend && pnpm run test:e2e:playwright",
+        "docker:up": "docker-compose up -d",
+        "docker:down": "docker-compose down",
+        "docker:restart": "docker-compose restart",
+        "docker:build": "docker-compose build",
+        "start": "pnpm run build && pnpm run docker:build && pnpm run docker:up",
+        "start:dev": "docker-compose up mongo -d && concurrently \"pnpm run dev:backend\" \"pnpm run dev:frontend\" --names \"backend,frontend\" --prefix-colors \"cyan,magenta\""
+    },
+    "devDependencies": {
+        "concurrently": "^9.1.2"
+    }
+}

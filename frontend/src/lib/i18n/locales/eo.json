@@ -1,0 +1,43 @@
+{
+    "app": {
+        "title": "Wisebits Babilejo"
+    },
+    "nav": {
+        "home": "Hejmo",
+        "login": "Ensaluti",
+        "register": "Registriĝi",
+        "logout": "Elsaluti"
+    },
+    "stories": {
+        "your_story": "Via rakonto",
+        "add_story": "Aldoni vian rakonton",
+        "view_story": "Vidi vian rakonton",
+        "camera_permission_denied": "Bonvolu permesi aliron al la fotilo por registri rakontojn",
+        "upload_failed": "Malsukcesis alŝuti rakonton"
+    },
+    "chat": {
+        "search_placeholder": "Serĉi uzantojn...",
+        "new_chat": "Nova babilejo",
+        "type_message": "Tajpu mesaĝon...",
+        "send": "Sendi",
+        "select_chat": "Elektu babilejon por komenci babiladon",
+        "online": "Enreta",
+        "offline": "Eksterreta"
+    },
+    "auth": {
+        "username": "Uzantnomo",
+        "email": "Retpoŝto",
+        "password": "Pasvorto",
+        "login_button": "Ensaluti",
+        "register_button": "Registriĝi",
+        "have_account": "Ĉu vi jam havas konton? Ensaluti",
+        "no_account": "Ĉu vi ne havas konton? Registriĝi",
+        "login_success": "Ensaluto sukcesa!",
+        "register_success": "Registrado sukcesa! Bonvolu ensaluti."
+    },
+    "camera": {
+        "start_recording": "Komenci registradon",
+        "stop_recording": "Ĉesigi registradon",
+        "uploading": "Alŝutante..."
+    }
+}

@@ -1,0 +1,43 @@
+{
+    "app": {
+        "title": "Wisebits Čat"
+    },
+    "nav": {
+        "home": "Glavna",
+        "login": "Vhod",
+        "register": "Registracija",
+        "logout": "Izhod"
+    },
+    "stories": {
+        "your_story": "Tvoja istorija",
+        "add_story": "Dodati tvoju istoriju",
+        "view_story": "Gledati tvoju istoriju",
+        "camera_permission_denied": "Prosim, pozvoli pristup k kameri dja zapisi istorij",
+        "upload_failed": "Ne udalo se zagruziti istoriju"
+    },
+    "chat": {
+        "search_placeholder": "Iskanje polzovatelej...",
+        "new_chat": "Novy čat",
+        "type_message": "Napiši poslanje...",
+        "send": "Poslati",
+        "select_chat": "Izberi čat dja začetka besedy",
+        "online": "V seti",
+        "offline": "Ne v seti"
+    },
+    "auth": {
+        "username": "Imę polzovatelja",
+        "email": "E-počta",
+        "password": "Parol",
+        "login_button": "Vhod",
+        "register_button": "Registracija",
+        "have_account": "Juž imaješ akaunt? Vhod",
+        "no_account": "Nemaješ akaunta? Registracija",
+        "login_success": "Vhod uspešny!",
+        "register_success": "Registracija uspešna! Prosim, vojdi."
+    },
+    "camera": {
+        "start_recording": "Začeti zapis",
+        "stop_recording": "Ostanoviti zapis",
+        "uploading": "Zagružanje..."
+    }
+}
