@@ -1,6 +1,19 @@
 .DS_Store
 **/node_modules
 **/.env
-**/frontend-build
-**/frontend-builds
-backend/frontend-build/**
+
+# Build artifacts (generated files, should not be in git)
+backend/frontend-build
+frontend/build
+frontend/.svelte-kit
+
+# Uploads (user-generated content)
+backend/uploads
+
+# Logs
+*.log
+npm-debug.log*
+
+# IDE
+.vscode
+.idea
